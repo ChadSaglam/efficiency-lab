@@ -3,6 +3,8 @@
 How small can a bookkeeping model get? Five models, same 74 held-out-vendor invoice lines,
 measured on an Apple Silicon laptop with MLX.
 
+Live table: https://huggingface.co/spaces/ChadSaglam/efficiency-lab
+
 | Model | Accuracy | Median ms/line | Peak memory |
 |---|---|---|---|
 | Base Qwen2.5-0.5B (prompted) | 16.2% | 69 | 1.14 GB |
