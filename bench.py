@@ -7,6 +7,7 @@ MODELS = {
     "base 0.5B (prompted)": "Qwen/Qwen2.5-0.5B-Instruct",
     "LoRA 0.5B fp16": "../swiss-bookkeeping-ai/fused",
     "LoRA 0.5B 4-bit": "../swiss-bookkeeping-ai/fused_4bit",
+    "LoRA 0.5B 8-bit": "../swiss-bookkeeping-ai/fused_8bit",
     "base 1.5B (prompted)": "Qwen/Qwen2.5-1.5B-Instruct",
 }
 only = sys.argv[1:]

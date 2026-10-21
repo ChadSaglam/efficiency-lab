@@ -1,0 +1,6 @@
+model,accuracy,median_ms,total_s,peak_gb
+base 0.5B (prompted),0.162,69,5.3,1.14
+LoRA 0.5B fp16,0.932,71,5.3,1.13
+LoRA 0.5B 4-bit,0.716,61,4.9,0.44
+LoRA 0.5B 8-bit,0.932,54,4.6,0.71
+base 1.5B (prompted),0.392,226,17.6,3.25

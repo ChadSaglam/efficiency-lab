@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Efficiency Lab</title>
+<style>
+body{font-family:system-ui,sans-serif;max-width:860px;margin:2rem auto;padding:0 1rem;line-height:1.5;color:#1a1a1a}
+table{border-collapse:collapse;width:100%}
+th,td{text-align:left;padding:.5rem;border-bottom:1px solid #ddd}
+.bar{background:#e6e6e6;border-radius:4px;height:10px;width:140px}
+.fill{background:#2a7;height:10px;border-radius:4px}
+caption{text-align:left;font-weight:600;margin-bottom:.5rem}
+.note{color:#555;font-size:.9rem}
+</style>
+</head>
+<body>
+<h1>Efficiency Lab</h1>
+<p>Small models for Swiss SME invoice-line classification. Same 74 held-out-vendor test lines, Apple Silicon laptop, MLX.</p>
+<table id="t">
+<caption>Accuracy, speed and memory</caption>
+<thead><tr><th>Model</th><th>Accuracy</th><th></th><th>Median ms/line</th><th>Peak GB</th></tr></thead>
+<tbody></tbody>
+</table>
+<p class="note">Synthetic data. 74 test rows means about +/-6 points of uncertainty. Latency varies by about 20 ms between runs.
+Code: <a href="https://github.com/ChadSaglam/efficiency-lab">github.com/ChadSaglam/efficiency-lab</a></p>
+<script>
+fetch("results.csv").then(r => r.text()).then(text => {
+  const lines = text.trim().split("\n").map(l => l.split(","));
+  const head = lines.shift();
+  const col = Object.fromEntries(head.map((h, i) => [h, i]));
+  const data = lines.map(r => ({
+    model: r[col.model], acc: parseFloat(r[col.accuracy]),
+    ms: r[col.median_ms], gb: r[col.peak_gb]
+  })).sort((a, b) => b.acc - a.acc);
+  const body = document.querySelector("#t tbody");
+  data.forEach(d => {
+    const tr = document.createElement("tr");
+    tr.innerHTML = "<td>" + d.model + "</td><td>" + (d.acc * 100).toFixed(1) + "%</td>" +
+      '<td><div class="bar" aria-hidden="true"><div class="fill" style="width:' + (d.acc * 100) + '%"></div></div></td>' +
+      "<td>" + d.ms + "</td><td>" + d.gb + "</td>";
+    body.appendChild(tr);
+  });
+});
+</script>
+</body>
+</html>
