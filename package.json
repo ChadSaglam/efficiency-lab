@@ -1,0 +1,14 @@
+{
+  "name": "efficiency-lab",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite space",
+    "build": "vite build space",
+    "preview": "vite preview space"
+  },
+  "devDependencies": {
+    "vite": "^7.0.0"
+  }
+}

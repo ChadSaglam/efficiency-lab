@@ -1,47 +1,231 @@
 <!doctype html>
 <html lang="en">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Efficiency Lab</title>
-<style>
-body{font-family:system-ui,sans-serif;max-width:860px;margin:2rem auto;padding:0 1rem;line-height:1.5;color:#1a1a1a}
-table{border-collapse:collapse;width:100%}
-th,td{text-align:left;padding:.5rem;border-bottom:1px solid #ddd}
-.bar{background:#e6e6e6;border-radius:4px;height:10px;width:140px}
-.fill{background:#2a7;height:10px;border-radius:4px}
-caption{text-align:left;font-weight:600;margin-bottom:.5rem}
-.note{color:#555;font-size:.9rem}
-</style>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Accuracy, latency and memory for small Swiss bookkeeping models.">
+  <title>Efficiency Lab | Swiss Bookkeeping AI</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --paper: #f6f7f4;
+      --surface: #ffffff;
+      --ink: #202523;
+      --muted: #626a65;
+      --line: #dce1dc;
+      --accent: #23634e;
+      --accent-soft: #e8f0eb;
+      --track: #e5e9e5;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: var(--paper);
+      color: var(--ink);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      line-height: 1.55;
+    }
+    main { max-width: 1080px; margin: 0 auto; padding: 48px 24px 32px; }
+    a { color: var(--accent); }
+    a:focus-visible, button:focus-visible { outline: 3px solid #8eb6a4; outline-offset: 3px; }
+    .eyebrow {
+      margin: 0 0 10px;
+      color: var(--accent);
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: .13em;
+      text-transform: uppercase;
+    }
+    h1 { margin: 0; font-size: clamp(36px, 6vw, 56px); line-height: 1.05; letter-spacing: -.04em; }
+    .lead { max-width: 760px; margin: 18px 0 0; color: var(--muted); font-size: 18px; }
+    .links { display: flex; flex-wrap: wrap; gap: 8px; margin: 24px 0 0; }
+    .links a {
+      padding: 7px 11px;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      background: var(--surface);
+      font-size: 14px;
+      font-weight: 600;
+      text-decoration: none;
+    }
+    .links a:hover { border-color: var(--accent); }
+    .highlight {
+      margin: 32px 0;
+      padding: 20px 22px;
+      border-left: 4px solid var(--accent);
+      background: var(--surface);
+    }
+    .highlight strong { display: block; margin-bottom: 4px; font-size: 20px; }
+    .highlight p { margin: 0; color: var(--muted); }
+    .table-wrap { overflow-x: auto; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); }
+    table { width: 100%; min-width: 760px; border-collapse: collapse; }
+    caption { padding: 18px; text-align: left; font-size: 18px; font-weight: 700; }
+    th {
+      padding: 11px 16px;
+      border-top: 1px solid var(--line);
+      border-bottom: 1px solid var(--line);
+      background: #f0f2ef;
+      color: var(--muted);
+      font-size: 12px;
+      letter-spacing: .04em;
+      text-align: left;
+      text-transform: uppercase;
+    }
+    td { padding: 16px; border-bottom: 1px solid var(--line); vertical-align: middle; }
+    tbody tr:last-child td { border-bottom: 0; }
+    tbody tr.preferred { background: var(--accent-soft); }
+    .model-name { color: var(--ink); font-weight: 650; text-decoration: none; }
+    .model-name:hover { color: var(--accent); text-decoration: underline; }
+    .best-note { display: block; margin-top: 3px; color: var(--accent); font-size: 12px; font-weight: 600; }
+    .accuracy { min-width: 190px; }
+    .accuracy-value { display: inline-block; width: 52px; font-weight: 700; }
+    .bar { display: inline-block; width: 112px; height: 8px; overflow: hidden; border-radius: 4px; background: var(--track); vertical-align: middle; }
+    .fill { height: 100%; border-radius: 4px; background: var(--accent); }
+    .number { white-space: nowrap; font-variant-numeric: tabular-nums; }
+    #status { margin: 16px 0; color: var(--muted); }
+    .scroll-hint { display: none; }
+    .method { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; margin: 34px 0; }
+    .method div { padding-top: 14px; border-top: 1px solid var(--line); }
+    .method h2 { margin: 0 0 5px; font-size: 14px; }
+    .method p { margin: 0; color: var(--muted); font-size: 14px; }
+    .note { padding: 18px 0; border-top: 1px solid var(--line); color: var(--muted); font-size: 14px; }
+    .note strong { color: var(--ink); }
+    footer { display: flex; flex-wrap: wrap; gap: 16px; padding-top: 18px; border-top: 1px solid var(--line); font-size: 14px; }
+    @media (max-width: 700px) {
+      main { padding: 32px 16px 24px; }
+      .lead { font-size: 16px; }
+      .scroll-hint { display: block; margin: 10px 0 0; color: var(--muted); font-size: 13px; }
+      .method { grid-template-columns: 1fr; gap: 16px; }
+      .highlight { padding: 16px 18px; }
+    }
+  </style>
 </head>
 <body>
-<h1>Efficiency Lab</h1>
-<p>Small models for Swiss SME invoice-line classification. Same 74 held-out-vendor test lines, Apple Silicon laptop, MLX.</p>
-<table id="t">
-<caption>Accuracy, speed and memory</caption>
-<thead><tr><th>Model</th><th>Accuracy</th><th></th><th>Median ms/line</th><th>Peak GB</th></tr></thead>
-<tbody></tbody>
-</table>
-<p class="note">Synthetic data. 74 test rows means about +/-6 points of uncertainty. Latency varies by about 20 ms between runs.
-Code: <a href="https://github.com/ChadSaglam/efficiency-lab">github.com/ChadSaglam/efficiency-lab</a></p>
-<script>
-fetch("results.csv").then(r => r.text()).then(text => {
-  const lines = text.trim().split("\n").map(l => l.split(","));
-  const head = lines.shift();
-  const col = Object.fromEntries(head.map((h, i) => [h, i]));
-  const data = lines.map(r => ({
-    model: r[col.model], acc: parseFloat(r[col.accuracy]),
-    ms: r[col.median_ms], gb: r[col.peak_gb]
-  })).sort((a, b) => b.acc - a.acc);
-  const body = document.querySelector("#t tbody");
-  data.forEach(d => {
-    const tr = document.createElement("tr");
-    tr.innerHTML = "<td>" + d.model + "</td><td>" + (d.acc * 100).toFixed(1) + "%</td>" +
-      '<td><div class="bar" aria-hidden="true"><div class="fill" style="width:' + (d.acc * 100) + '%"></div></div></td>' +
-      "<td>" + d.ms + "</td><td>" + d.gb + "</td>";
-    body.appendChild(tr);
-  });
-});
-</script>
+  <main>
+    <header>
+      <p class="eyebrow">Swiss Bookkeeping AI</p>
+      <h1>Efficiency Lab</h1>
+      <p class="lead">Accuracy, latency and memory for five small models, measured on the same 74 held-out-vendor invoice lines.</p>
+      <nav class="links" aria-label="Project resources">
+        <a href="https://huggingface.co/ChadSaglam/swiss-bookkeeping-qwen-lora" target="_blank" rel="noreferrer">Fused model</a>
+        <a href="https://huggingface.co/ChadSaglam/swiss-bookkeeping-qwen-lora-mlx-8bit" target="_blank" rel="noreferrer">8-bit model</a>
+        <a href="https://huggingface.co/datasets/ChadSaglam/swiss-sme-bookkeeping-dataset" target="_blank" rel="noreferrer">Dataset</a>
+        <a href="https://github.com/ChadSaglam/swiss-bookkeeping-ai" target="_blank" rel="noreferrer">Training code</a>
+        <a href="https://github.com/ChadSaglam/efficiency-lab" target="_blank" rel="noreferrer">Benchmark code</a>
+      </nav>
+    </header>
+
+    <section class="highlight" aria-labelledby="finding-title">
+      <strong id="finding-title">8-bit offers the best balance in this run.</strong>
+      <p>It matched fp16 accuracy at 93.2%, used about 37% less peak memory and recorded the lowest median latency among the fine-tuned variants.</p>
+    </section>
+
+    <section aria-label="Benchmark results">
+      <div class="table-wrap">
+        <table id="results-table">
+          <caption>Benchmark results</caption>
+          <thead>
+            <tr><th>Model</th><th>Accuracy</th><th>Median latency</th><th>Peak memory</th></tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+      <p class="scroll-hint">Scroll the table horizontally for latency and memory →</p>
+      <p id="status" role="status">Loading results…</p>
+    </section>
+
+    <section class="method" aria-label="Measurement method">
+      <div><h2>Test set</h2><p>74 synthetic invoice lines. Twelve vendors were held out from training; phrases can still overlap.</p></div>
+      <div><h2>Environment</h2><p>One Apple Silicon laptop using MLX. Results are not a cross-hardware leaderboard.</p></div>
+      <div><h2>Measurements</h2><p>Accuracy, median generation time per line and peak memory during each run.</p></div>
+    </section>
+
+    <aside class="note">
+      <strong>Read small differences with caution.</strong> Seventy-four rows give roughly ±6 points of accuracy uncertainty. Latency varied by about 20 ms between runs. The dataset is synthetic and covers only six accounts, so these results do not estimate real-world bookkeeping performance.
+    </aside>
+
+    <footer>
+      <a href="https://huggingface.co/datasets/ChadSaglam/swiss-sme-bookkeeping-dataset" target="_blank" rel="noreferrer">Data and validation</a>
+      <a href="https://huggingface.co/ChadSaglam/swiss-bookkeeping-qwen-lora" target="_blank" rel="noreferrer">Model card</a>
+      <a href="https://github.com/ChadSaglam/efficiency-lab" target="_blank" rel="noreferrer">Reproduce this benchmark</a>
+    </footer>
+  </main>
+
+  <script>
+    const modelLinks = {
+      "base 0.5B (prompted)": "https://huggingface.co/Qwen/Qwen2.5-0.5B-Instruct",
+      "LoRA 0.5B fp16": "https://huggingface.co/ChadSaglam/swiss-bookkeeping-qwen-lora",
+      "LoRA 0.5B 8-bit": "https://huggingface.co/ChadSaglam/swiss-bookkeeping-qwen-lora-mlx-8bit",
+      "base 1.5B (prompted)": "https://huggingface.co/Qwen/Qwen2.5-1.5B-Instruct"
+    };
+
+    fetch("results.csv")
+      .then(response => {
+        if (!response.ok) throw new Error(`Could not load results.csv (${response.status})`);
+        return response.text();
+      })
+      .then(text => {
+        const lines = text.trim().split(/\r?\n/).map(line => line.split(",").map(cell => cell.trim()));
+        const head = lines.shift();
+        const col = Object.fromEntries(head.map((name, index) => [name, index]));
+        const data = lines.map(row => ({
+          model: row[col.model],
+          accuracy: Number(row[col.accuracy]),
+          medianMs: Number(row[col.median_ms]),
+          peakGb: Number(row[col.peak_gb])
+        })).sort((a, b) => b.accuracy - a.accuracy || a.peakGb - b.peakGb);
+
+        const body = document.querySelector("#results-table tbody");
+        data.forEach(result => {
+          const row = document.createElement("tr");
+          const isPreferred = result.model === "LoRA 0.5B 8-bit";
+          if (isPreferred) row.className = "preferred";
+
+          const modelCell = document.createElement("td");
+          const href = modelLinks[result.model];
+          if (href) {
+            const link = document.createElement("a");
+            link.className = "model-name";
+            link.href = href;
+            link.target = "_blank";
+            link.rel = "noreferrer";
+            link.textContent = result.model;
+            modelCell.appendChild(link);
+          } else {
+            const name = document.createElement("span");
+            name.className = "model-name";
+            name.textContent = result.model;
+            modelCell.appendChild(name);
+          }
+          if (isPreferred) {
+            const note = document.createElement("span");
+            note.className = "best-note";
+            note.textContent = "Best balance in this run";
+            modelCell.appendChild(note);
+          }
+
+          const accuracyCell = document.createElement("td");
+          accuracyCell.className = "accuracy";
+          const percent = (result.accuracy * 100).toFixed(1) + "%";
+          accuracyCell.innerHTML = `<span class="accuracy-value">${percent}</span><span class="bar" aria-hidden="true"><span class="fill" style="display:block;width:${result.accuracy * 100}%"></span></span>`;
+
+          const latencyCell = document.createElement("td");
+          latencyCell.className = "number";
+          latencyCell.textContent = `${result.medianMs} ms/line`;
+          const memoryCell = document.createElement("td");
+          memoryCell.className = "number";
+          memoryCell.textContent = `${result.peakGb.toFixed(2)} GB`;
+
+          row.append(modelCell, accuracyCell, latencyCell, memoryCell);
+          body.appendChild(row);
+        });
+        document.getElementById("status").hidden = true;
+      })
+      .catch(error => {
+        const status = document.getElementById("status");
+        status.textContent = error.message;
+        status.setAttribute("role", "alert");
+      });
+  </script>
 </body>
 </html>
